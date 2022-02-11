@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Uliana97/fullstack-project#readme",
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^17.0.16",
     "nodemon": "^2.0.15",
     "ts-node": "^10.5.0",
@@ -31,7 +32,11 @@
     "@mikro-orm/core": "^4.0.0-alpha.0",
     "@mikro-orm/migrations": "^4.0.0-alpha.0",
     "@mikro-orm/postgresql": "^4.0.0-alpha.0",
+    "apollo-server-express": "^2.16.1",
+    "express": "^4.17.1",
+    "graphql": "^15.3.0",
     "pg": "^8.3.0",
+    "type-graphql": "^1.0.0-rc.3",
     "watch": "^1.0.2"
   },
   "mikro-orm": {

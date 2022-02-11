@@ -1,8 +1,10 @@
 import { MikroORM } from "@mikro-orm/core";
 import { __prod__ } from "./constants";
-import { Post } from "./entities/Post";
-// import { Post } from "./entities/Post";
 import microConfig from "./mikro-orm.config";
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import { buildSchema } from "type-graphql";
+import { HelloResolver } from "./resolvers/hello";
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
@@ -11,11 +13,23 @@ const main = async () => {
   // yarn start2
   await orm.getMigrator().up();
 
-  // const post = orm.em.create(Post, { title: "second post" }); // create NEW post
-  // await orm.em.persistAndFlush(post); // push post into DB
+  // define express server
+  const app = express();
 
-  const posts = await orm.em.find(Post, {}); // show me ALL posts in DB
-  console.log(posts);
+  const apolloServer = new ApolloServer({
+    schema: await buildSchema({
+      resolvers: [HelloResolver],
+      validate: false,
+    }),
+  });
+
+  // creates graphql endpoind
+  apolloServer.applyMiddleware({ app });
+
+  // start server on port 4000
+  app.listen(4000, () => {
+    console.log("server started at post 4000");
+  });
 };
 
 main().catch((err) => {
