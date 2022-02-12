@@ -10,10 +10,7 @@ export class PostsResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(
-    @Arg("identifier") id: number,
-    @Ctx() { em }: MyContext
-  ): Promise<Post | null> {
+  post(@Arg("id") id: number, @Ctx() { em }: MyContext): Promise<Post | null> {
     return em.findOne(Post, id);
   }
 
@@ -25,5 +22,38 @@ export class PostsResolver {
     const post = em.create(Post, { title });
     await em.persistAndFlush(post);
     return post;
+  }
+
+  @Mutation(() => Post, { nullable: true })
+  async editPost(
+    @Arg("id") id: number,
+    @Arg("title", () => String) title: string,
+    @Ctx() { em }: MyContext
+  ): Promise<Post | null> {
+    const post = await em.findOne(Post, { id });
+
+    if (!post) {
+      return null;
+    }
+
+    if (typeof title !== undefined) {
+      post.title = title;
+      await em.persistAndFlush(post);
+    }
+
+    return post;
+  }
+
+  @Mutation(() => Boolean)
+  async deletePost(
+    @Arg("id") id: number,
+    @Ctx() { em }: MyContext
+  ): Promise<boolean> {
+    try {
+      em.nativeDelete(Post, { id });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
