@@ -28,12 +28,3 @@ export class User {
   @Property({ type: "text" })
   password!: string;
 }
-
-// RETURNS THIS IN DB (example)password
-// User {
-//   id: 1,
-//   createdAt: 2022-02-11T17:31:07.000Z,
-//   updatedAt: 2022-02-11T17:31:07.000Z,
-//   email: 'uli@mail.ru',
-//   password: uli123
-// }

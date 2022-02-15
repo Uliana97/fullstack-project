@@ -42,28 +42,134 @@ __decorate([
 RegisterInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], RegisterInput);
+let FieldError = class FieldError {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "field", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "message", void 0);
+FieldError = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], FieldError);
+let UserResponse = class UserResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [FieldError], { nullable: true }),
+    __metadata("design:type", Array)
+], UserResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => User_1.User, { nullable: true }),
+    __metadata("design:type", User_1.User)
+], UserResponse.prototype, "user", void 0);
+UserResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], UserResponse);
 let UserResolver = class UserResolver {
-    register(options, { em }) {
+    register({ email, username, password }, { em }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const hashedPassword = yield argon2.hash(options.password);
+            const emailRegex = new RegExp("[a-z0-9]+@[a-z]+.[a-z]{2,3}");
+            if (!emailRegex.test(email)) {
+                return {
+                    errors: [
+                        {
+                            field: "email",
+                            message: "Incorrect email",
+                        },
+                    ],
+                };
+            }
+            if (username.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "length must be greater than 2",
+                        },
+                    ],
+                };
+            }
+            if (password.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "length must be greater than 2",
+                        },
+                    ],
+                };
+            }
+            const hashedPassword = yield argon2.hash(password);
             const user = em.create(User_1.User, {
-                email: options.email,
-                username: options.username,
+                email,
+                username,
                 password: hashedPassword,
             });
-            yield em.persistAndFlush(user);
-            return user;
+            try {
+                yield em.persistAndFlush(user);
+            }
+            catch (err) {
+                if (err.code === "23505") {
+                    return {
+                        errors: [
+                            {
+                                field: "username",
+                                message: "username or email already taken",
+                            },
+                        ],
+                    };
+                }
+            }
+            return { user };
+        });
+    }
+    login({ username, password }, { em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, { username });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "That username doesn't exist",
+                        },
+                    ],
+                };
+            }
+            const verify = yield argon2.verify(user.password, password);
+            if (!verify) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "Incorrect password",
+                        },
+                    ],
+                };
+            }
+            return { user };
         });
     }
 };
 __decorate([
-    (0, type_graphql_1.Mutation)(() => User_1.User),
+    (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)("options")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [RegisterInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)("options")),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [RegisterInput, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "login", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
